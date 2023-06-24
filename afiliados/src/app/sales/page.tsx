@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Legend from '../components/Legend';
 
 interface Seller {
@@ -39,10 +39,18 @@ function SalesTransactionPage() {
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetchSalesTransactions();
   }, []);
 
+  const handleUploadButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+  
   const fetchSalesTransactions = async (url?: string) => {
     try {
       setLoading(true);
@@ -62,6 +70,32 @@ function SalesTransactionPage() {
     } catch (error) {
       setError(error.message);
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch('http://localhost:8000/sales/sales-transactions/', {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3NjQwMDYwLCJqdGkiOiIwNGZjZGVjMTNjNmQ0ZmQ0YjliMmRmNWY3YzAzMzdjMCIsInVzZXJfaWQiOjEsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiaWQiOjF9.mhvs7Q2rFr_6og0vahx9duTpGS8BKTLmvV-zgHfOosHnY21FVKgTQaWDBeZSa6faBW6bUNDw4P75OIH12D08ZA',
+          },
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error('Failed to upload file');
+        }
+        const data = await response.json();
+        fetchSalesTransactions();
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
     }
   };
 
@@ -109,10 +143,25 @@ function SalesTransactionPage() {
   return (
     <div className="container mx-auto p-4 text-white">
       <h1 className="text-2xl font-bold mb-4">Transações</h1>
+
+      <div className="flex justify-end mb-4">
+        <button
+          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+          onClick={handleUploadButtonClick}
+        >
+          Fazer Upload
+        </button>
+        {/* Elemento input file oculto */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: 'none' }}
+          onChange={handleFileUpload}
+        />
+      </div>
   
       <Legend items={saleTypeLegend} colors={SaleTypeColors} />
 
-  
       <div className="overflow-x-auto ">
         <table className="min-w-full bg-white  ">
           <thead className='text-white bg-black'>

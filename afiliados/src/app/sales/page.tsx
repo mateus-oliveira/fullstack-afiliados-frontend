@@ -77,7 +77,7 @@ function SalesTransactionPage() {
     }
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number): string => {
     const valueAbs = Math.abs(value);
     const formatter = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -85,6 +85,17 @@ function SalesTransactionPage() {
     });
   
     return formatter.format(valueAbs);
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
   };
 
   if (loading) {
@@ -98,7 +109,10 @@ function SalesTransactionPage() {
   return (
     <div className="container mx-auto p-4 text-white">
       <h1 className="text-2xl font-bold mb-4">Transações</h1>
+  
       <Legend items={saleTypeLegend} colors={SaleTypeColors} />
+
+  
       <div className="overflow-x-auto ">
         <table className="min-w-full bg-white  ">
           <thead className='text-white bg-black'>
@@ -116,7 +130,7 @@ function SalesTransactionPage() {
                 <td className="py-2 px-4 border-b text-center">#{transaction.id}</td>
                 <td className="py-2 px-4 border-b text-center">{transaction.product}</td>
                 <td className="py-2 px-4 border-b text-center">{formatCurrency(transaction.price)}</td>
-                <td className="py-2 px-4 border-b text-center">{transaction.purchased_date}</td>
+                <td className="py-2 px-4 border-b text-center">{formatDate(transaction.purchased_date)}</td>
                 <td className="py-2 px-4 border-b text-center">{transaction.seller.name}</td>
               </tr>
             ))}

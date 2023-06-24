@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Legend from '../components/Legend';
 
 interface Seller {
   id: number;
@@ -18,10 +19,17 @@ interface SalesTransaction {
 }
 
 const SaleTypeColors: Record<number, string> = {
-  1: 'bg-green-100',
-  2: 'bg-blue-100',
-  3: 'bg-red-100',
-  4: 'bg-yellow-100',
+  1: 'bg-green-400',
+  2: 'bg-blue-400',
+  3: 'bg-red-400',
+  4: 'bg-yellow-400',
+};
+
+const saleTypeLegend: Record<number, string> = {
+  1: 'Venda Criador',
+  2: 'Venda Afiliado',
+  3: 'Comissão Paga',
+  4: 'Comissão Recebida',
 };
 
 function SalesTransactionPage() {
@@ -69,60 +77,71 @@ function SalesTransactionPage() {
     }
   };
 
+  const formatCurrency = (value: number) => {
+    const valueAbs = Math.abs(value);
+    const formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    });
+  
+    return formatter.format(valueAbs);
+  };
+
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-white">Carregando...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="text-white">Erro: {error}</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Sales Transactions</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200 ">
-          <thead>
+    <div className="container mx-auto p-4 text-white">
+      <h1 className="text-2xl font-bold mb-4">Transações</h1>
+      <Legend items={saleTypeLegend} colors={SaleTypeColors} />
+      <div className="overflow-x-auto ">
+        <table className="min-w-full bg-white  ">
+          <thead className='text-white bg-black'>
             <tr>
-              <th className="py-2 px-4 border-b">ID</th>
-              <th className="py-2 px-4 border-b">Product</th>
-              <th className="py-2 px-4 border-b">Price</th>
-              <th className="py-2 px-4 border-b">Purchased Date</th>
-              <th className="py-2 px-4 border-b">Sale Type</th>
-              <th className="py-2 px-4 border-b">Seller Name</th>
+              <th className="py-2 px-4 border-b">Nº</th>
+              <th className="py-2 px-4 border-b">Produto</th>
+              <th className="py-2 px-4 border-b">Valor</th>
+              <th className="py-2 px-4 border-b">Data</th>
+              <th className="py-2 px-4 border-b">Vendedor</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='text-black'>
             {salesTransactions.map((transaction) => (
               <tr key={transaction.id} className={SaleTypeColors[transaction.sale_type]}>
-                <td className="py-2 px-4 border-b text-center">{transaction.id}</td>
+                <td className="py-2 px-4 border-b text-center">#{transaction.id}</td>
                 <td className="py-2 px-4 border-b text-center">{transaction.product}</td>
-                <td className="py-2 px-4 border-b text-center">{transaction.price}</td>
+                <td className="py-2 px-4 border-b text-center">{formatCurrency(transaction.price)}</td>
                 <td className="py-2 px-4 border-b text-center">{transaction.purchased_date}</td>
-                <td className="py-2 px-4 border-b text-center">{transaction.sale_type}</td>
                 <td className="py-2 px-4 border-b text-center">{transaction.seller.name}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      
       <div className="flex justify-center mt-4">
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2"
           onClick={handlePreviousPage}
           disabled={!previousPage}
         >
-          Previous
+          {'<<'}
         </button>
         <button
           className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           onClick={handleNextPage}
           disabled={!nextPage}
         >
-          Next
+          {'>>'}
         </button>
       </div>
     </div>
+    
   );
 }
 

@@ -1,6 +1,7 @@
 version: '3'
 services:
   app:
+    container_name: next_afiliados
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,4 +13,3 @@ services:
       - '3000:3000'
     environment:
       - REACT_APP_API_URL=${REACT_APP_API_URL}
-      - NODE_ENV=development

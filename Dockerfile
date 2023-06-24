@@ -13,5 +13,5 @@ EXPOSE 3000
 RUN npm install
 RUN npm run build
 
-# Define o comando de inicialização da aplicação
+# Start application
 CMD ["npm", "start"]

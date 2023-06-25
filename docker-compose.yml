@@ -9,9 +9,5 @@ services:
       - ./afiliados:/app
       - /app/node_modules
       - /app/.next
-    env_file:
-      - .env
     ports:
       - '3000:3000'
-    environment:
-      - REACT_APP_API_URL=${REACT_APP_API_URL}

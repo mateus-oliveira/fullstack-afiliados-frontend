@@ -10,7 +10,7 @@ const Legend: React.FC<LegendProps> = ({ items, colors }) => {
     <div className="flex mt-4">
       {Object.entries(items).map(([key, value]) => (
         <div key={key} className="flex items-center mr-4">
-          <div className={`w-4 h-4 mr-2 ${colors[key]} rounded-full`} />
+          <div className={`w-4 h-4 mr-2 ${colors[Number(key)]} rounded-full`} />
           <span>{value}</span>
         </div>
       ))}

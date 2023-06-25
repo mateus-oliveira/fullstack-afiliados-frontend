@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Legend from '../components/Legend';
+import {getAuthAccess} from '../Auth';
 
 interface Seller {
   id: number;
@@ -36,14 +38,25 @@ function SalesTransactionPage() {
   const [salesTransactions, setSalesTransactions] = useState<SalesTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [access, setAccess] = useState<string | null>(null);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchSalesTransactions();
-  }, []);
+    if (!getAuthAccess()) {
+      router.push('/')
+    } else {
+      setAccess(getAuthAccess());
+    }
+  }, [])
+
+  useEffect(() => {
+    if (access)
+      fetchSalesTransactions();
+  }, [access]);
 
   const handleUploadButtonClick = () => {
     if (fileInputRef.current) {
@@ -54,9 +67,9 @@ function SalesTransactionPage() {
   const fetchSalesTransactions = async (url?: string) => {
     try {
       setLoading(true);
-      const response = await fetch(url || `http://localhost:8000/sales/sales-transactions/`, {
+      const response = await fetch(url || `${process.env.NEXT_PUBLIC_BASE_URL}/sales/sales-transactions/`, {
         headers: {
-          Authorization: 'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3NjQwMDYwLCJqdGkiOiIwNGZjZGVjMTNjNmQ0ZmQ0YjliMmRmNWY3YzAzMzdjMCIsInVzZXJfaWQiOjEsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiaWQiOjF9.mhvs7Q2rFr_6og0vahx9duTpGS8BKTLmvV-zgHfOosHnY21FVKgTQaWDBeZSa6faBW6bUNDw4P75OIH12D08ZA',
+          Authorization: `Bearer ${access}`,
         },
       });
       if (!response.ok) {
@@ -67,7 +80,7 @@ function SalesTransactionPage() {
       setNextPage(data.next);
       setPreviousPage(data.previous);
       setLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       setError(error.message);
       setLoading(false);
     }
@@ -83,7 +96,7 @@ function SalesTransactionPage() {
         const response = await fetch('http://localhost:8000/sales/sales-transactions/', {
           method: 'POST',
           headers: {
-            Authorization: 'Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3NjQwMDYwLCJqdGkiOiIwNGZjZGVjMTNjNmQ0ZmQ0YjliMmRmNWY3YzAzMzdjMCIsInVzZXJfaWQiOjEsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwiaWQiOjF9.mhvs7Q2rFr_6og0vahx9duTpGS8BKTLmvV-zgHfOosHnY21FVKgTQaWDBeZSa6faBW6bUNDw4P75OIH12D08ZA',
+            Authorization: `Bearer ${access}`,
           },
           body: formData,
         });
@@ -92,7 +105,7 @@ function SalesTransactionPage() {
         }
         const data = await response.json();
         fetchSalesTransactions();
-      } catch (error) {
+      } catch (error: any) {
         setError(error.message);
         setLoading(false);
       }

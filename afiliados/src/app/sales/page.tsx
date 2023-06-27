@@ -39,8 +39,11 @@ function SalesTransactionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [access, setAccess] = useState<string | null>(null);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [selectedSeller, setSelectedSeller] = useState<number | null>(null);
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
+  const [total, setTotal] = useState<number>(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -54,20 +57,20 @@ function SalesTransactionPage() {
   }, [])
 
   useEffect(() => {
-    if (access)
+    if (access) {
       fetchSalesTransactions();
-  }, [access]);
-
-  const handleUploadButtonClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
+      fetchSellers();
     }
-  };
-  
+  }, [access, selectedSeller]);
+
   const fetchSalesTransactions = async (url?: string) => {
     try {
       setLoading(true);
-      const response = await fetch(url || `${process.env.NEXT_PUBLIC_BASE_URL}/sales/sales-transactions/`, {
+      let apiUrl = url || `${process.env.NEXT_PUBLIC_BASE_URL}/sales/sales-transactions/`;
+      if (selectedSeller) {
+        apiUrl += `?seller=${selectedSeller}`;
+      }
+      const response = await fetch(apiUrl, {
         headers: {
           Authorization: `Bearer ${access}`,
         },
@@ -76,6 +79,7 @@ function SalesTransactionPage() {
         throw new Error('Failed to fetch sales transactions');
       }
       const data = await response.json();
+      setTotal(data.total);
       setSalesTransactions(data.results);
       setNextPage(data.next);
       setPreviousPage(data.previous);
@@ -86,6 +90,34 @@ function SalesTransactionPage() {
     }
   };
 
+  const fetchSellers = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/sales/sellers/`, {
+        headers: {
+          Authorization: `Bearer ${access}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch sellers');
+      }
+      const data = await response.json();
+      setSellers(data.results);
+    } catch (error: any) {
+      setError(error.message);
+    }
+  };
+
+  const handleSellerChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const sellerId = event.target.value ? parseInt(event.target.value) : null;
+    setSelectedSeller(sellerId);
+  };
+
+  const handleUploadButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -93,7 +125,7 @@ function SalesTransactionPage() {
         setLoading(true);
         const formData = new FormData();
         formData.append('file', file);
-        const response = await fetch('http://localhost:8000/sales/sales-transactions/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/sales/sales-transactions/`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${access}`,
@@ -103,7 +135,6 @@ function SalesTransactionPage() {
         if (!response.ok) {
           throw new Error('Failed to upload file');
         }
-        const data = await response.json();
         fetchSalesTransactions();
       } catch (error: any) {
         setError(error.message);
@@ -125,13 +156,13 @@ function SalesTransactionPage() {
   };
 
   const formatCurrency = (value: number): string => {
-    const valueAbs = Math.abs(value);
+    const valueReal = value / 100.0;
     const formatter = new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL',
     });
   
-    return formatter.format(valueAbs);
+    return formatter.format(valueReal);
   };
 
   const formatDate = (dateString: string): string => {
@@ -171,6 +202,31 @@ function SalesTransactionPage() {
           style={{ display: 'none' }}
           onChange={handleFileUpload}
         />
+      </div>
+
+      <div className="flex justify-end mb-4">
+        <div 
+          className="bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          Total: {formatCurrency(total)}
+        </div>
+      </div>
+
+      <div className="flex items-center mt-4">
+        <label htmlFor="seller" className="mr-2">Vendedor:</label>
+        <select
+          id="seller"
+          value={selectedSeller || ''}
+          onChange={handleSellerChange}
+          className="border border-gray-300 rounded p-2 bg-blue-100 text-blue-800"
+        >
+          <option value="">---------------</option>
+          {sellers.length > 0 &&
+            sellers.map((seller) => (
+              <option key={seller.id} value={seller.id}>
+                {seller.name}
+              </option>
+            ))}
+        </select>
       </div>
   
       <Legend items={saleTypeLegend} colors={SaleTypeColors} />

@@ -2,6 +2,7 @@
 
 import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
 import { getAuthAccess, setAuthAccess } from './Auth';
 
 function LoginPage() {
@@ -30,15 +31,24 @@ function LoginPage() {
         },
         body: JSON.stringify({username, password}),
       });
-      if (!response.ok) {
-        throw new Error('Failed to login');
-      }
-      
-      await response.json().then(({access}) => {
-        setAuthAccess(access);
-        router.push('/sales');
-      });  
 
+      if (!response.ok) {
+        Swal.fire({
+          title: 'Não foi dessa vez!',
+          text: 'Verifica suas credenciais e tente novamente.',
+          icon: 'error',
+        });
+      } else {
+        await response.json().then(({access}) => {
+          Swal.fire({
+            title: 'Muito bom!',
+            text: 'Login efetuado com sucesso',
+            icon: 'success',
+          });
+          setAuthAccess(access);
+          router.push('/sales');
+        });  
+      }
 
       setLoading(false);
     } catch (error: any) {
@@ -67,7 +77,7 @@ function LoginPage() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="username" className="block mb-2 font-medium">
-              username
+              Username
             </label>
             <input
               type="username"

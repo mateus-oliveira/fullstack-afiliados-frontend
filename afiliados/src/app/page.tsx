@@ -14,7 +14,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (getAuthAccess()) {
-      router.push('/sales')
+      router.push('/sales');
     }
   }, [])
 

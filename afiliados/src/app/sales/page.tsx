@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Legend from '../components/Legend';
-import {getAuthAccess} from '../Auth';
+import {getAuthAccess, setAuthAccess} from '../Auth';
+import Swal from 'sweetalert2';
 
 interface Seller {
   id: number;
@@ -63,6 +64,11 @@ function SalesTransactionPage() {
     }
   }, [access, selectedSeller]);
 
+  const logout = () => {
+    setAuthAccess('');
+    router.push('/');
+  }
+
   const fetchSalesTransactions = async (url?: string) => {
     try {
       setLoading(true);
@@ -75,8 +81,8 @@ function SalesTransactionPage() {
           Authorization: `Bearer ${access}`,
         },
       });
-      if (!response.ok) {
-        throw new Error('Failed to fetch sales transactions');
+      if (response.status == 401) {
+        logout();
       }
       const data = await response.json();
       setTotal(data.total);
@@ -188,6 +194,33 @@ function SalesTransactionPage() {
     <div className="container mx-auto p-4 text-white">
       <h1 className="text-2xl font-bold mb-4">Transações</h1>
 
+      <div className="flex items-center mt-4">
+        <label htmlFor="seller" className="mr-2">Vendedor:</label>
+        <select
+          id="seller"
+          value={selectedSeller || ''}
+          onChange={handleSellerChange}
+          className="border border-gray-300 rounded p-2 bg-blue-100 text-blue-800"
+        >
+          <option value="">---------------</option>
+          {sellers.length > 0 &&
+            sellers.map((seller) => (
+              <option key={seller.id} value={seller.id}>
+                {seller.name}
+              </option>
+            ))}
+        </select>
+      </div>
+
+      <div className="flex justify-end mb-4">
+      <button
+          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          onClick={logout}
+        >
+          Sair
+        </button>
+      </div>
+
       <div className="flex justify-end mb-4">
         <button
           className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
@@ -210,50 +243,36 @@ function SalesTransactionPage() {
           Total: {formatCurrency(total)}
         </div>
       </div>
-
-      <div className="flex items-center mt-4">
-        <label htmlFor="seller" className="mr-2">Vendedor:</label>
-        <select
-          id="seller"
-          value={selectedSeller || ''}
-          onChange={handleSellerChange}
-          className="border border-gray-300 rounded p-2 bg-blue-100 text-blue-800"
-        >
-          <option value="">---------------</option>
-          {sellers.length > 0 &&
-            sellers.map((seller) => (
-              <option key={seller.id} value={seller.id}>
-                {seller.name}
-              </option>
-            ))}
-        </select>
-      </div>
   
       <Legend items={saleTypeLegend} colors={SaleTypeColors} />
 
-      <div className="overflow-x-auto ">
-        <table className="min-w-full bg-white  ">
-          <thead className='text-white bg-black'>
-            <tr>
-              <th className="py-2 px-4 border-b">Nº</th>
-              <th className="py-2 px-4 border-b">Produto</th>
-              <th className="py-2 px-4 border-b">Valor</th>
-              <th className="py-2 px-4 border-b">Data</th>
-              <th className="py-2 px-4 border-b">Vendedor</th>
-            </tr>
-          </thead>
-          <tbody className='text-black'>
-            {salesTransactions.map((transaction) => (
-              <tr key={transaction.id} className={SaleTypeColors[transaction.sale_type]}>
-                <td className="py-2 px-4 border-b text-center">#{transaction.id}</td>
-                <td className="py-2 px-4 border-b text-center">{transaction.product}</td>
-                <td className="py-2 px-4 border-b text-center">{formatCurrency(transaction.price)}</td>
-                <td className="py-2 px-4 border-b text-center">{formatDate(transaction.purchased_date)}</td>
-                <td className="py-2 px-4 border-b text-center">{transaction.seller.name}</td>
+      <div className="overflow-x-auto flex items-center justify-center min-h-[500px]">
+        {salesTransactions.length ? (
+          <table className="min-w-full bg-white  ">
+            <thead className='text-white bg-black'>
+              <tr>
+                <th className="py-2 px-4 border-b">Nº</th>
+                <th className="py-2 px-4 border-b">Produto</th>
+                <th className="py-2 px-4 border-b">Valor</th>
+                <th className="py-2 px-4 border-b">Data</th>
+                <th className="py-2 px-4 border-b">Vendedor</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className='text-black'>
+              {salesTransactions.map((transaction) => (
+                <tr key={transaction.id} className={SaleTypeColors[transaction.sale_type]}>
+                  <td className="py-2 px-4 border-b text-center">#{transaction.id}</td>
+                  <td className="py-2 px-4 border-b text-center">{transaction.product}</td>
+                  <td className="py-2 px-4 border-b text-center">{formatCurrency(transaction.price)}</td>
+                  <td className="py-2 px-4 border-b text-center">{formatDate(transaction.purchased_date)}</td>
+                  <td className="py-2 px-4 border-b text-center">{transaction.seller.name}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <strong className="text-4xl mt-20">Nenhuma Transação</strong>
+        )}
       </div>
       
       <div className="flex justify-center mt-4">

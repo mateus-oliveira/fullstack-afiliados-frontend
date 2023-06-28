@@ -7,6 +7,10 @@ This is a challenge by [Coodesh](https://lab.coodesh.com/devmateusalves/fullstac
 - Docker 24.0.2
 - React (Next and Tailwind)
 
+###  Presentation
+
+Take a look at this video, there I explain about the challenge and I show my solution: [Click here](https://www.loom.com/embed/b6a79883a94e4674818e30c82b8d565d)
+
 
 ### Run with Docker
  

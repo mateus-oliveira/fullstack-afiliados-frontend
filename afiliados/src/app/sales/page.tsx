@@ -87,6 +87,7 @@ function SalesTransactionPage() {
       const data = await response.json();
       setTotal(data.total);
       setSalesTransactions(data.results);
+      fetchSellers();
       setNextPage(data.next);
       setPreviousPage(data.previous);
       setLoading(false);
